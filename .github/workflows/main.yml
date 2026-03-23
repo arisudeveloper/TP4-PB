@@ -33,20 +33,24 @@ jobs:
 
       - name: Install and Run Services
         run: |
-          npm install -g wait-on
-          
           cd TP4-PB-Frontend
           npm install
           npm run dev & 
           
           cd ../TP4-PB-Backend/target
-          echo "Conteúdo da pasta target:"
-          ls -R
+          nohup java -jar *.jar > backend-log.txt 2>&1 &
           
-          nohup java -Xmx512m -jar *.jar --server.port=8080 > backend-log.txt 2>&1 &
-          
-          echo "Aguardando serviços (Vite: 5173, Spring: 8080)..."
-          wait-on http://localhost:5173 http://localhost:8080 --timeout 180000
+          echo "Aguardando serviços ficarem online..."
+          for i in {1..30}; do
+            if curl -s http://localhost:5173 > /dev/null && curl -s http://localhost:8080 > /dev/null; then
+              echo "Iniciando testes..."
+              exit 0
+            fi
+            echo "Attempt $i: Aguardando portas 5173 e 8080..."
+            sleep 10
+          done
+          echo "Erro: Os serviços não subiram a tempo."
+          exit 1
 
       - name: Run Tests
         run: |
@@ -56,8 +60,8 @@ jobs:
       - name: Debug Backend Logs
         if: failure()
         run: |
-          echo "--- LOG DO BACKEND ---"
-          cat TP4-PB-Backend/target/backend-log.txt || echo "Arquivo de log não encontrado."
+          echo "--- LOG DO SPRING BOOT ---"
+          cat TP4-PB-Backend/target/backend-log.txt || echo "Log não encontrado"
 
       - name: Upload Jacoco Report
         if: always()
