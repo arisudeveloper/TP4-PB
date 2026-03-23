@@ -48,21 +48,33 @@ public class ProdutoSeleniumTest {
     @DisplayName("Deve cadastrar um produto com sucesso e validar na lista")
     void testCadastrarProdutoComSucesso() {
         driver.get(URL_FRONT);
-
-        WebElement inputNome = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("input[placeholder='nome']")));
-        WebElement inputQtd = driver.findElement(By.cssSelector("input[placeholder='quantidade']"));
-        WebElement inputPreco = driver.findElement(By.cssSelector("input[placeholder='preço']"));
-        WebElement btnCadastrar = driver.findElement(By.xpath("//button[text()='cadastrar']"));
-
+        
+        WebElement inputNome = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("input[placeholder='nome']")));
+        
+        inputNome.clear();
         inputNome.sendKeys("Mesa");
-        inputQtd.sendKeys("10");
-        inputPreco.sendKeys("700");
-        btnCadastrar.click();
+        driver.findElement(By.cssSelector("input[placeholder='quantidade']")).sendKeys("10");
+        driver.findElement(By.cssSelector("input[placeholder='preço']")).sendKeys("700");
+        
+        driver.findElement(By.xpath("//button[text()='cadastrar']")).click();
 
-        boolean encontrouProduto = wait.until(ExpectedConditions.textToBePresentInElementLocated(
+        try {
+            WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(3));
+            if (shortWait.until(ExpectedConditions.alertIsPresent()) != null) {
+                String msgAlerta = driver.switchTo().alert().getText();
+                driver.switchTo().alert().accept();
+                if (msgAlerta.toLowerCase().contains("erro")) {
+                    Assertions.fail("O Front exibiu erro ao cadastrar: " + msgAlerta);
+                }
+            }
+        } catch (Exception e) {
+
+        }
+
+        boolean encontrou = wait.until(ExpectedConditions.textToBePresentInElementLocated(
                 By.className("containerProdutos"), "Mesa"));
-
-        assertTrue(encontrouProduto, "O produto deveria estar visível na lista após o cadastro.");
+        
+        assertTrue(encontrou, "O produto deveria estar na lista, mas não foi encontrado.");
     }
 
     @Test
