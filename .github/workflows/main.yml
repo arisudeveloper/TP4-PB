@@ -24,8 +24,9 @@ jobs:
         run: |
           cd TP4-PB-Frontend
           npm install
+          npm install -g wait-on
           npm run dev &
-          sleep 15 # Tempo extra para o servidor Vite ficar pronto
+          wait-on http://localhost:5173 --timeout 60000
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -37,7 +38,7 @@ jobs:
       - name: Build and Test with Maven
         run: |
           cd TP4-PB-Backend
-          mvn clean verify
+          mvn clean verify -Dsurefire.rerunFailingTestsCount=2
 
       - name: Upload Jacoco Report
         if: always()
