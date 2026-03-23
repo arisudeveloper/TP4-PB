@@ -84,8 +84,12 @@ public class ProdutoSeleniumTest {
     @DisplayName("Deve remover um produto da lista")
     void testExcluirProduto() {
         driver.get(URL_FRONT);
+        
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("containerProdutos")));
+
         WebElement btnExcluir = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[text()='excluir']")));
-        btnExcluir.click();
+        
+        ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", btnExcluir);
     }
 
     @Test
