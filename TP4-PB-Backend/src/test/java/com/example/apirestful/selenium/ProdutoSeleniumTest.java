@@ -26,9 +26,13 @@ public class ProdutoSeleniumTest {
         WebDriverManager.chromedriver().setup();
 
         ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless=new"); 
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--remote-allow-origins=*");
+
         driver = new ChromeDriver(options);
         driver.manage().window().maximize();
-
         wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
 
@@ -45,7 +49,7 @@ public class ProdutoSeleniumTest {
     void testCadastrarProdutoComSucesso() {
         driver.get(URL_FRONT);
 
-        WebElement inputNome = driver.findElement(By.cssSelector("input[placeholder='nome']"));
+        WebElement inputNome = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("input[placeholder='nome']")));
         WebElement inputQtd = driver.findElement(By.cssSelector("input[placeholder='quantidade']"));
         WebElement inputPreco = driver.findElement(By.cssSelector("input[placeholder='preço']"));
         WebElement btnCadastrar = driver.findElement(By.xpath("//button[text()='cadastrar']"));
@@ -66,16 +70,12 @@ public class ProdutoSeleniumTest {
     @DisplayName("Validar mensagem de erro para campos vazios")
     void testValidarCamposObrigatorios() {
         driver.get(URL_FRONT);
-
-        WebElement btnCadastrar = driver.findElement(By.xpath("//button[text()='cadastrar']"));
+        WebElement btnCadastrar = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[text()='cadastrar']")));
         btnCadastrar.click();
 
         wait.until(ExpectedConditions.alertIsPresent());
         String textoAlerta = driver.switchTo().alert().getText();
-
-        assertTrue(textoAlerta.contains("preencha todos os campos"),
-                "Deveria exibir o alerta de campos obrigatórios.");
-
+        assertTrue(textoAlerta.contains("preencha todos os campos"), "Deveria exibir o alerta de campos obrigatórios.");
         driver.switchTo().alert().accept();
     }
 
@@ -84,10 +84,8 @@ public class ProdutoSeleniumTest {
     @DisplayName("Deve remover um produto da lista")
     void testExcluirProduto() {
         driver.get(URL_FRONT);
-
         WebElement btnExcluir = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[text()='excluir']")));
         btnExcluir.click();
-
     }
 
     @Test
@@ -95,11 +93,9 @@ public class ProdutoSeleniumTest {
     @DisplayName("Simular Falha de Rede/Timeout")
     void testSimularTimeoutRede() {
         driver.manage().timeouts().pageLoadTimeout(Duration.ofMillis(10));
-
         Assertions.assertThrows(org.openqa.selenium.TimeoutException.class, () -> {
             driver.get("http://10.255.255.1");
         }, "O sistema deveria identificar o timeout de rede.");
-
         driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
     }
 
@@ -108,24 +104,20 @@ public class ProdutoSeleniumTest {
     @DisplayName("Entrada Inválida")
     void testEntradaInvalida() {
         driver.get(URL_FRONT);
-
-        WebElement inputNome = driver.findElement(By.cssSelector("input[placeholder='nome']"));
+        WebElement inputNome = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("input[placeholder='nome']")));
         WebElement btnCadastrar = driver.findElement(By.xpath("//button[text()='cadastrar']"));
 
         String dadosFuzz = "<script>alert('entrada invalida')</script> " + "A".repeat(100);
-
         inputNome.sendKeys(dadosFuzz);
         driver.findElement(By.cssSelector("input[placeholder='quantidade']")).sendKeys("1");
         driver.findElement(By.cssSelector("input[placeholder='preço']")).sendKeys("1");
-
         btnCadastrar.click();
 
         try {
             wait.until(ExpectedConditions.alertIsPresent());
             driver.switchTo().alert().accept();
-            assertTrue(true, "O sistema barrou a entrada inválida.");
         } catch (Exception e) {
-            assertTrue(true, "O sistema tratou a entrada sem travar.");
+            assertTrue(true);
         }
     }
 }

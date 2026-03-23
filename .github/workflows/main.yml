@@ -25,6 +25,7 @@ jobs:
           cd TP4-PB-Frontend
           npm install
           npm run dev &
+          sleep 10 # Aguarda o Vite estabilizar
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
