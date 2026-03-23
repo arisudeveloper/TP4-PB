@@ -40,9 +40,12 @@ jobs:
           npm run dev & 
           
           cd ../TP4-PB-Backend/target
-          nohup java -Xmx512m -jar *.jar > backend-log.txt 2>&1 &
+          echo "Conteúdo da pasta target:"
+          ls -R
           
-          echo "Aguardando serviços subirem (Timeout de 3 minutos)..."
+          nohup java -Xmx512m -jar *.jar --server.port=8080 > backend-log.txt 2>&1 &
+          
+          echo "Aguardando serviços (Vite: 5173, Spring: 8080)..."
           wait-on http://localhost:5173 http://localhost:8080 --timeout 180000
 
       - name: Run Tests
@@ -50,11 +53,11 @@ jobs:
           cd TP4-PB-Backend
           mvn test
 
-      - name: Debug Backend Logs on Failure
+      - name: Debug Backend Logs
         if: failure()
         run: |
-          echo "--- CONTEÚDO DO LOG DO BACKEND ---"
-          cat TP4-PB-Backend/target/backend-log.txt || echo "Log não encontrado"
+          echo "--- LOG DO BACKEND ---"
+          cat TP4-PB-Backend/target/backend-log.txt || echo "Arquivo de log não encontrado."
 
       - name: Upload Jacoco Report
         if: always()
