@@ -31,26 +31,30 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install and Run Frontend
+      - name: Install and Run Services
         run: |
+          npm install -g wait-on
+          
           cd TP4-PB-Frontend
           npm install
-          npm install -g wait-on
-          npm run dev &
-
-      - name: Run Backend
-        run: |
-          cd TP4-PB-Backend/target
-          java -jar *.jar &
-
-      - name: Wait for Services
-        run: |
+          npm run dev & 
+          
+          cd ../TP4-PB-Backend/target
+          nohup java -jar *.jar > backend-log.txt 2>&1 &
+          
+          echo "Aguardando serviços subirem..."
           wait-on http://localhost:5173 http://localhost:8080 --timeout 120000
 
       - name: Run Tests
         run: |
           cd TP4-PB-Backend
           mvn test
+
+      - name: Debug Backend Logs
+        if: failure()
+        run: |
+          echo "--- LOG DO BACKEND ---"
+          cat TP4-PB-Backend/target/backend-log.txt || echo "Log não encontrado"
 
       - name: Upload Jacoco Report
         if: always()
